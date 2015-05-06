@@ -1,33 +1,30 @@
 #!/bin/bash -e
+DIR="$1"
+if [ ! -d "$DIR" ]
+then
+    >&2 echo "reup error: can't watch missing dir $DIR"
+    exit 1
+fi
 # we touch this file, then ask find to find files modified more recently
-# two files are used to avoid touch->find race condition
+# two files are used to avoid a touch->(save .erl)->find race condition
 MARKER=$(mktemp)
+a=0
+b=1
+touch "${MARKER}.$a"
+touch "${MARKER}.$b"
 
 function cleanup() {
     rm -f "${MARKER}.0"
     rm -f "${MARKER}.1"
 }
 trap cleanup EXIT
-DIR="$1"
-
-if [ ! -d "$DIR" ]
-then
-    >&2 echo "reup error: can't watch missing dir $DIR"
-    exit 1
-fi
-
-a=0
-b=1
-# must exist, or find fails
-touch "${MARKER}.$a"
-touch "${MARKER}.$b"
 
 # loop is pumped by erlang process writing to stdin
 # so we can control polling speed from erlang without overlapping under load
 # 60 second timeout on read, in case erlang exits uncleanly.
 while read -t 60 line
 do
-    if [ "$line" = "exit" ]
+    if [ "$line" = "exit" ] || [ -z "$line" ]
     then
         exit 0
     fi
@@ -49,9 +46,10 @@ do
             echo "$f"
         fi
     done
-    echo "ok"
     # swap i & ii
     tmp="$a"
     a="$b"
     b="$tmp"
+    # tell erlang we're done, so it can enqueue the next poll
+    echo "ok"
 done

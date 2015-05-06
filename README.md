@@ -4,8 +4,9 @@
 changed modules using the same compiler options as the last compile, and
 **reloads** them.
 
-Similar to [sync](https://github.com/rustyio/sync), but with different
-bugs :)
+Conceptually similar to [sync](https://github.com/rustyio/sync), but
+with less weirdness. Stateless, because we watch the filesystem by
+polling with find.
 
 Because it reuses the compile options from last time (provided you
 compile with `debug_info`), it will Just Work.

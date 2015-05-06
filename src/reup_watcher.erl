@@ -41,12 +41,10 @@ default_src_dir() ->
         %% assuming script from project root, with apps
         "./apps",
         %% assuming script from project root, with single-otp project
-        "./src"
+        "./src",
+        CWD
     ],
-    case first_valid_dir(Guesses) of
-        undefined -> CWD;
-        Dir -> Dir
-    end.
+    first_valid_dir(Guesses).
 
 first_valid_dir([]) -> undefined;
 first_valid_dir([Dir|Rest]) ->
@@ -112,13 +110,24 @@ code_change(_OldVsn, State, _Extra) ->
 mod_info(M) when is_atom(M) ->
     %% does this always work?
     %% can easily get this info from module_info() if debug_info used.
-    case filename:find_src(M) of
-        {Src, Opts} ->
-            {Src, Opts}
+    case code:load_file(M) of
+        {error, nofile} ->
+            nofile;
+        {module, M} ->
+            case filename:find_src(M) of
+                {error, {not_existing, _}} ->
+                    not_existing;
+                {Src, Opts} ->
+                    {Src, Opts}
+            end
     end.
 
 reup_module(M) when is_atom(M) ->
     case mod_info(M) of
+        nofile ->
+            nofile;
+        not_existing ->
+            not_existing;
         {Src, Opts} ->
             case compile:file(Src, Opts) of
                 error ->
@@ -126,9 +135,13 @@ reup_module(M) when is_atom(M) ->
                     error;
                 {ok, M} ->
                     code:purge(M),
-                    {module, M} = code:load_file(M),
-                    io:format("Reup: ~s\n",[M]),
-                    maybe_run_tests(M)
+                    case code:load_file(M) of
+                        {error, nofile} ->
+                            nofile;
+                        {module, M} ->
+                            io:format("Reup: ~s\n",[M]),
+                            maybe_run_tests(M)
+                    end
             end
     end.
 
