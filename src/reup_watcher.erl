@@ -58,7 +58,7 @@ first_valid_dir([Dir|Rest]) ->
 
 init([]) ->
     SrcDir = src_dir(),
-    io:format("Watching for *.erl/*.hrl changes in ~s\n",[SrcDir]),
+    io:format("reup watching for source changes in ~s\n",[SrcDir]),
     Exe = code:priv_dir(reup) ++ "/reup-watcher.sh",
     Port = open_port({spawn_executable, Exe}, [
         {args, [SrcDir]},
@@ -113,13 +113,18 @@ mod_info(M) when is_atom(M) ->
     case code:load_file(M) of
         {error, nofile} ->
             nofile;
+        {error, not_purged} ->
+            loaded_mod_info(M);
         {module, M} ->
-            case filename:find_src(M) of
-                {error, {not_existing, _}} ->
-                    not_existing;
-                {Src, Opts} ->
-                    {Src, Opts}
-            end
+            loaded_mod_info(M)
+    end.
+
+loaded_mod_info(M) when is_atom(M) ->
+    case filename:find_src(M) of
+        {error, {not_existing, _}} ->
+            not_existing;
+        {Src, Opts} ->
+            {Src, Opts}
     end.
 
 reup_module(M) when is_atom(M) ->
