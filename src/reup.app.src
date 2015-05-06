@@ -1,0 +1,12 @@
+{application, reup, [
+    {description, "Created with erlang.bootstrap."},
+    {vsn, "0.1.0"},
+    {modules, []},
+    {registered, [reup_sup]},
+    {applications, [
+        kernel,
+        stdlib
+    ]},
+    {mod, {reup_app, []}},
+    {env, []}
+]}.
