@@ -7,7 +7,7 @@ then
 fi
 # we touch this file, then ask find to find files modified more recently
 # two files are used to avoid a touch->(save .erl)->find race condition
-MARKER=$(mktemp)
+MARKER=$(mktemp -t tmp.XXXXXXXXXX)
 a=0
 b=1
 touch "${MARKER}.$a"
