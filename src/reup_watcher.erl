@@ -98,7 +98,7 @@ handle_info(Info, State) ->
     {noreply, State}.
 
 terminate(_Reason, #state{port=Port}) ->
-    (catch port_command(Port, "exit")),
+    (catch port_command(Port, "exit\n")),
     (catch port_close(Port)),
     ok.
 
