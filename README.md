@@ -4,12 +4,11 @@
 changed modules using the same compiler options as the last compile, and
 **reloads** them.
 
-Conceptually similar to [sync](https://github.com/rustyio/sync), but
-with less weirdness. Stateless, because we watch the filesystem by
-polling with find.
+Conceptually similar to [sync](https://github.com/rustyio/sync) and [active](https://github.com/synrc/active), but works happily on NFS or vbox shared folders. Stateless, because we watch the filesystem by
+polling with find, so can handle enormous erlang projects just fine.
 
 Because it reuses the compile options from last time (provided you
-compile with `debug_info`), it will Just Work.
+compile with `debug_info`), it will Just Work, regardless of what you use to build your project (rebar2, rebar3, make, etc).
 
 ### Building
 
