@@ -24,7 +24,7 @@ Something, something..
 ### Implementation Notes
 
 Has to work on virtualbox with crappy shared folders, so doesn't use
-inotify. Only tested on linux. Probably works on mac, if find works the same.
+inotify or fswatcher stuff. Known to work on Ubuntu Linux & OS X.
 
 The script in `priv/` polls for src changes using some shell gubbins,
 and emits changed filenames.
