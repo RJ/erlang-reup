@@ -1,5 +1,5 @@
 {application, reup, [
-    {description, "Created with erlang.bootstrap."},
+    {description, "dev watcher that auto compiles and reloads modules"},
     {vsn, "0.1.0"},
     {modules, []},
     {registered, [reup_sup]},
