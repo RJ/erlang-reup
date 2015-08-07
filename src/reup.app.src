@@ -8,5 +8,8 @@
         stdlib
     ]},
     {mod, {reup_app, []}},
-    {env, []}
+    {env, []},
+    {contributors, ["Richard Jones <rj@metabrew.com>"]},
+    {licenses, ["Apache"]},
+    {links, [{"github.com/RJ/erlang-reup", "https://github.com/RJ/erlang-reup"}]}
 ]}.
