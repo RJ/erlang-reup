@@ -3,6 +3,8 @@
 
 -define(POLL_INTERVAL, 2000).
 
+-define(LOG(S,F), io:format("[reup] " ++ S ++ "\n", F)).
+
 %% API.
 -export([start_link/0, reup_module/1]).
 
@@ -58,7 +60,7 @@ first_valid_dir([Dir|Rest]) ->
 
 init([]) ->
     SrcDir = src_dir(),
-    io:format("reup watching for source changes in ~s\n",[SrcDir]),
+    ?LOG("watching for source changes in ~s",[SrcDir]),
     Exe = code:priv_dir(reup) ++ "/reup-watcher.sh",
     Port = open_port({spawn_executable, Exe}, [
         {args, [SrcDir]},
@@ -73,7 +75,7 @@ handle_call(_Request, _From, State) ->
     {reply, ignored, State}.
 
 handle_cast(Info, State) ->
-    io:format("unhandled cast: ~p\n",[Info]),
+    ?LOG("unhandled cast: ~p",[Info]),
     {noreply, State}.
 
 handle_info(pump, State = #state{port=Port}) ->
@@ -90,11 +92,11 @@ handle_info({Port, {data, {eol, Line}}}, State = #state{port=Port}) ->
     {noreply, State};
 
 handle_info({'EXIT', Port, Reason}, State = #state{port=Port}) ->
-    io:format("reup port exit ~p\n", [Reason]),
+    ?LOG("port exit ~p", [Reason]),
     {stop, {port_exit, Reason}, State};
 
 handle_info(Info, State) ->
-    io:format("unhandled reup info: ~p\n",[Info]),
+    ?LOG("unhandled reup info: ~p",[Info]),
     {noreply, State}.
 
 terminate(_Reason, #state{port=Port}) ->
@@ -130,21 +132,27 @@ loaded_mod_info(M) when is_atom(M) ->
 reup_module(M) when is_atom(M) ->
     case mod_info(M) of
         nofile ->
+            ?LOG("~s - nofile",[M]),
             nofile;
         not_existing ->
+            ?LOG("~s - not_existing",[M]),
             not_existing;
-        {Src, Opts} ->
+        {Src, Opts0} ->
+            ?LOG("~s - compiling...",[M]),
+            OutDir = filename:dirname(code:which(M)),
+            Opts = [{outdir, OutDir} | Opts0],
             case compile:file(Src, Opts) of
                 error ->
-                    io:format("Reup ERROR: ~s\n~p\n",[Src,Opts]),
+                    ?LOG("ERROR: ~s\n~p",[Src,Opts]),
                     error;
                 {ok, M} ->
                     code:purge(M),
                     case code:load_file(M) of
-                        {error, nofile} ->
+                        {error, Err} ->
+                            ?LOG("reloaded ERROR -> ~p: ~s",[Err, M]),
                             nofile;
                         {module, M} ->
-                            io:format("Reup: ~s\n",[M]),
+                            ?LOG("reloaded: ~s",[M]),
                             maybe_run_tests(M)
                     end
             end
@@ -153,14 +161,14 @@ reup_module(M) when is_atom(M) ->
 maybe_run_tests(M) when is_atom(M) ->
     case erlang:function_exported(M, test, 0) of
         true ->
-            io:format("Reup: ~s:test() ...", [M]),
+            ?LOG("~s:test() ...", [M]),
             try M:test() of
                 ok ->
-                    io:format(" PASSED\n"),
+                    ?LOG("~s:test() ... PASSED", [M]),
                     reloaded_test_pass
             catch
                 Reason ->
-                    io:format(" FAILED\n~p\n",[Reason]),
+                    ?LOG("~s:test() ... FAILED ~p", [M, Reason]),
                     reloaded_test_fail
             end;
         false ->
