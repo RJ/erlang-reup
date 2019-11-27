@@ -19,6 +19,12 @@ Something, something..
 
     application:start(reup).
 
+### Options
+
+If you want reup to compile but not load the modules, set application env:
+
+`{reload_on_compile, false}`
+
 
 ### Implementation Notes
 

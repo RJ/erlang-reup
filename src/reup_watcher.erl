@@ -146,14 +146,19 @@ reup_module(M) when is_atom(M) ->
                     ?LOG("ERROR: ~s\n~p",[Src,Opts]),
                     error;
                 {ok, M} ->
-                    code:purge(M),
-                    case code:load_file(M) of
-                        {error, Err} ->
-                            ?LOG("reloaded ERROR -> ~p: ~s",[Err, M]),
-                            nofile;
-                        {module, M} ->
-                            ?LOG("reloaded: ~s",[M]),
-                            maybe_run_tests(M)
+                    case application:get_env(reup, reload_on_compile, true) of
+                        true ->
+                            code:purge(M),
+                            case code:load_file(M) of
+                                {error, Err} ->
+                                    ?LOG("reloaded ERROR -> ~p: ~s",[Err, M]),
+                                    nofile;
+                                {module, M} ->
+                                    ?LOG("reloaded: ~s",[M]),
+                                    maybe_run_tests(M)
+                            end;
+                        _ ->
+                            ok
                     end
             end
     end.
