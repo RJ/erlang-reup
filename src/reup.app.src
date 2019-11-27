@@ -1,6 +1,6 @@
 {application, reup, [
     {description, "dev watcher that auto compiles and reloads modules"},
-    {vsn, "0.1.0"},
+    {vsn, "0.1.1"},
     {modules, []},
     {registered, [reup_sup]},
     {applications, [
